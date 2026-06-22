@@ -2,13 +2,17 @@
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import axios from 'axios'
-import { Loader, Send, TruckElectric } from 'lucide-react'
+import { Loader, Send } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import EmptyBoxState from './EmptyBoxState'
 import GroupSizeUi from './GroupSizeUi'
 import BadgetUi from './BadgetUi'
-import SelectDaysUi from './SelectDaysUi'   // ← new
-import FinalUi from './FinalUi'             // ← new
+import SelectDaysUi from './SelectDaysUi'
+import FinalUi from './FinalUi'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { useUserDetail } from '@/app/provider'
+import { v4 as uuidv4 } from 'uuid';
 
 type Message = {
   role: string
@@ -16,57 +20,78 @@ type Message = {
   ui?: string
 }
 
- export type TripInfo ={
-    budget:string,
-    destination:string,
-    duration:string,
-    group_size :string,
-    origin:string,
-    hotels:any,
-    itinerary:any,
-
+export type TripInfo = {
+  budget: string,
+  destination: string,
+  duration: string,
+  group_size: string,
+  origin: string,
+  hotels: any,
+  itinerary: any,
 }
 
 function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState<string>('');
-  const [isFinal,setIsFinal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [tripDetail,setTripDetail]= useState<TripInfo>();
+  const [tripDetail, setTripDetail] = useState<TripInfo>();
+  const [finalBotMsg, setFinalBotMsg] = useState('');
+  const SaveTripDetail = useMutation(api.tripDetail.CreateTripDetail);
+  const { userDetail } = useUserDetail();
 
-  const onSend = async (overrideInput?: string) => {
+  const onSend = async (overrideInput?: string, forceFinal?: boolean) => {
     const input = overrideInput ?? userInput
     if (!input?.trim()) return
 
     const newMsg: Message = { role: 'user', content: input }
     setLoading(true)
     setUserInput('')
-    setMessages((prev) => [...prev, newMsg])
+
+    if (!forceFinal) {
+      setMessages((prev) => [...prev, newMsg])
+    }
 
     const result = await axios.post('/api/aimodel', {
       messages: [...messages, newMsg],
-      isFinal:isFinal
+      isFinal: forceFinal ?? false
     })
-      console.log("Trip"+result.data)
 
-    !isFinal&&setMessages((prev) => [
-      ...prev,
-      {
+    console.log("Response:", result.data)
+
+    if (forceFinal) {
+      const tripData = result?.data?.trip_plan
+      setTripDetail(tripData)
+      const tripId = uuidv4();
+      await SaveTripDetail({
+        tripDetail: tripData,
+        tripId: tripId,
+        uid: userDetail?._id
+      })
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: JSON.stringify(result.data),
+        ui: 'showFinal'
+      }])
+    } else {
+      setMessages((prev) => [...prev, {
         role: 'assistant',
         content: result?.data?.resp,
         ui: result?.data?.ui,
-      },
-    ])
-    if(isFinal){
-        setTripDetail(result?.data?.trip_plan);
+      }])
     }
-  
+
     setLoading(false)
   }
 
-  // Called when user picks an option from any generative UI card
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.ui === 'final') {
+      setFinalBotMsg(lastMsg.content)
+      onSend('Ok, Great!', true)
+    }
+  }, [messages])
+
   const handleOptionSelect = (value: string) => {
-    setUserInput(value)
     onSend(value)
   }
 
@@ -76,31 +101,30 @@ function ChatBox() {
     } else if (ui === 'groupSize') {
       return <GroupSizeUi onSelectOption={handleOptionSelect} />
     } else if (ui === 'tripDuration') {
-      // ← new
       return <SelectDaysUi onSelectOption={handleOptionSelect} />
     } else if (ui === 'final') {
-      // ← new — pass the full AI content so FinalUi can parse the trip JSON
-      return <FinalUi viewTrip={content}
-      disable={!tripDetail}
+      return null
+    }  else if (ui === 'showFinal') {
+  return (
+    <>
+      {finalBotMsg && (
+        <p className='text-sm mb-3'>{finalBotMsg}</p>
+      )}
+      <FinalUi
+        viewTrip={content}
+        disable={!tripDetail}
       />
-    }
+    </>
+  )
+}
     return null
   }
-  useEffect(()=>{
-    const lastMsg=messages[messages.length-1];
-    if(lastMsg?.ui=='final'){
-        setIsFinal(true);
-        setUserInput('Ok, Great!')
-        onSend();
-    }
-  },[messages])
 
   return (
     <div className='h-[85vh] flex flex-col'>
       {messages?.length === 0 && (
         <EmptyBoxState
           onSelectOption={(v: string) => {
-            setUserInput(v)
             onSend(v)
           }}
         />
@@ -117,12 +141,10 @@ function ChatBox() {
           ) : (
             <div className='flex justify-start mt-2' key={index}>
               <div className='max-w-lg bg-gray-100 text-black px-4 py-2 rounded-lg'>
-                {/* Don't show raw JSON when ui==='final', only show text otherwise */}
-                {msg.ui !== 'final' && msg.content}
+                {msg.ui !== 'final' && msg.ui !== 'showFinal' && msg.content}
 
-                {/* Always show generative UI for latest assistant message */}
-                {index === messages.length - 1 &&
-                  RenderGenerativeUi(msg.ui ?? '', msg.content ?? '')}
+                {/* ✅ index condition hatai — ab sab messages apna UI dikhayenge */}
+                {RenderGenerativeUi(msg.ui ?? '', msg.content ?? '')}
               </div>
             </div>
           )

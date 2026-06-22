@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from 'openai';
+import Groq from "groq-sdk";
 
-const client = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPEN_ROUTER_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 const PROMPT = `You are an AI Trip Planner Agent. Your goal is to help the user plan a trip by asking one relevant trip-related question at a time.
@@ -25,9 +24,8 @@ Once all required information is collected, generate and return a strict JSON re
   "ui": "budget/groupSize/tripDuration/final"
 }`
 
-
 const FINAL_PROMPT = `
-Generate Travel Plan with give details, give me Hotels options list with HotelName,
+Generate Travel Plan with given details, give me Hotels options list with HotelName,
 Hotel address, Price, hotel image url, geo coordinates, rating, descriptions and suggest itinerary with placeName,
 Place Details, Place Image Url, Geo Coordinates, Place address, ticket Pricing,
 Time travel each of the location, with each day plan with best time to visit in JSON format.
@@ -41,41 +39,34 @@ Output Schema:
     "origin": "string",
     "budget": "string",
     "group_size": "string",
-
     "hotels": [
       {
         "hotel_name": "string",
         "hotel_address": "string",
         "price_per_night": "string",
         "hotel_image_url": "string",
-
         "geo_coordinates": {
           "latitude": "number",
           "longitude": "number"
         },
-
         "rating": "number",
         "description": "string"
       }
     ],
-
     "itinerary": [
       {
         "day": "number",
         "day_plan": "string",
         "best_time_to_visit_day": "string",
-
         "activities": [
           {
             "place_name": "string",
             "place_details": "string",
             "place_image_url": "string",
-
             "geo_coordinates": {
               "latitude": "number",
               "longitude": "number"
             },
-
             "place_address": "string",
             "ticket_pricing": "string",
             "time_travel_each_location": "string",
@@ -85,35 +76,34 @@ Output Schema:
       }
     ]
   }
-}
-`
+}`
 
 export async function POST(req: NextRequest) {
-  const { messages , isFinal} = await req.json();
+  const { messages, isFinal } = await req.json();
   try {
-    const complitation = await client.chat.completions.create({
-      // model: 'openai/gpt-4o-mini',
-      model:'google/gemini-2.5-flash',
-      // line 33 pe sirf ye change karo:
-// model: 'meta-llama/llama-4-scout:free',
-// model: 'meta-llama/llama-3.3-70b-instruct:free',
-      // model: 'meta-llama/llama-3.1-8b-instruct:free',
-      // model: 'mistralai/mistral-7b-instruct:free',
-      response_format: { type: 'json_object' },
+    // ui field hatao — Groq accept nahi karta assistant messages mein
+    const cleanMessages = messages.map((msg: any) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" },
       messages: [
         {
-          role: 'system',
-          content: isFinal?FINAL_PROMPT:PROMPT
+          role: "system",
+          content: isFinal ? FINAL_PROMPT : PROMPT,
         },
-        ...messages
+        ...cleanMessages,
       ],
     });
 
-    console.log(complitation.choices[0].message);
-    const message = complitation.choices[0].message;
-    return NextResponse.json(JSON.parse(message.content ?? ''));
-  }
-  catch (e) {
+    const message = completion.choices[0].message;
+    console.log("Groq response:", message.content);
+    return NextResponse.json(JSON.parse(message.content ?? "{}"));
+
+  } catch (e) {
     console.error("API Error:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
