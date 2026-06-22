@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import axios from 'axios'
 import { Loader, Send } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import EmptyBoxState from './EmptyBoxState'
 import GroupSizeUi from './GroupSizeUi'
 import BadgetUi from './BadgetUi'
@@ -39,6 +39,13 @@ function ChatBox() {
   const SaveTripDetail = useMutation(api.tripDetail.CreateTripDetail);
   const { userDetail } = useUserDetail();
 
+  // ✅ userDetail ka latest value ref mein store karo
+  // kyunki onSend async hai aur closure mein purana value capture ho jata hai
+  const userDetailRef = useRef(userDetail);
+  useEffect(() => {
+    userDetailRef.current = userDetail;
+  }, [userDetail]);
+
   const onSend = async (overrideInput?: string, forceFinal?: boolean) => {
     const input = overrideInput ?? userInput
     if (!input?.trim()) return
@@ -60,13 +67,21 @@ function ChatBox() {
 
     if (forceFinal) {
       const tripData = result?.data?.trip_plan
+
+      // ✅ ref se latest userDetail lo — stale closure problem fix
+      const currentUser = userDetailRef.current;
+      console.log("userDetail from ref:", currentUser);
+      console.log("uid:", currentUser?._id);
+
       setTripDetail(tripData)
       const tripId = uuidv4();
+
       await SaveTripDetail({
         tripDetail: tripData,
         tripId: tripId,
-        uid: userDetail?._id
+        uid: currentUser?._id  // ✅ ref se lo, state se nahi
       })
+
       setMessages((prev) => [...prev, {
         role: 'assistant',
         content: JSON.stringify(result.data),
@@ -104,14 +119,16 @@ function ChatBox() {
       return <SelectDaysUi onSelectOption={handleOptionSelect} />
     } else if (ui === 'final') {
       return null
-    }  else if (ui === 'showFinal') {
+  } else if (ui === 'showFinal') {
   return (
     <>
       {finalBotMsg && (
         <p className='text-sm mb-3'>{finalBotMsg}</p>
       )}
       <FinalUi
-        viewTrip={content}
+        viewTrip={() => {
+          console.log("View Trip clicked", tripDetail)
+        }}
         disable={!tripDetail}
       />
     </>
@@ -142,8 +159,6 @@ function ChatBox() {
             <div className='flex justify-start mt-2' key={index}>
               <div className='max-w-lg bg-gray-100 text-black px-4 py-2 rounded-lg'>
                 {msg.ui !== 'final' && msg.ui !== 'showFinal' && msg.content}
-
-                {/* ✅ index condition hatai — ab sab messages apna UI dikhayenge */}
                 {RenderGenerativeUi(msg.ui ?? '', msg.content ?? '')}
               </div>
             </div>
