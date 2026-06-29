@@ -26,6 +26,32 @@ Traditional travel planning is **time-consuming, confusing, and exhausting**. Us
 
 ---
 
+## 📸 Project Screenshots
+
+## 🏠 Home Page
+
+![Home Page](ScreenShots/Home.png)
+
+## 🔐 Sign In
+
+![Sign In](ScreenShots/SignIn.png)
+
+## 🤖 AI ChatBox
+![AI ChatBox](ScreenShots/ChatBox.png)
+
+## 🤖 AI Chat
+
+![AI Chat](ScreenShots/Ai-Chat1.png)
+![AI Chat](ScreenShots/Ai-Chat2.png)
+
+## 📅 Generated Itinerary
+
+![Itinerary](ScreenShots/itinerary.png)
+
+## 🗺️ Interactive Map
+
+![Map](ScreenShots/Map.png)
+
 ## 🛠️ Tech Stack
 
 | Category | Technology |
