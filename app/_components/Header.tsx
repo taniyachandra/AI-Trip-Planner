@@ -13,7 +13,8 @@ const menuOptions = [
 function Header() {
   const { user } = useUser();
   return (
-    <div className="flex justify-between items-center p-4">
+    // <div className="flex justify-between items-center p-4 ">
+    <div className="flex justify-between items-center p-4 fixed top-0 left-0 w-full z-50 bg-white shadow-md">
       <div className="flex gap-2 items-center">
         <Image src="/logo.svg" alt="logo" width={30} height={30}/>
         <h2 className="font-bold text-2xl">AI Trip Planner</h2>

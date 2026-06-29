@@ -138,7 +138,7 @@ function ChatBox() {
   }
 
   return (
-    <div className='h-[85vh] flex flex-col'>
+    <div className='h-[90vh] flex flex-col'>
       {messages?.length === 0 && (
         <EmptyBoxState
           onSelectOption={(v: string) => {
@@ -150,13 +150,13 @@ function ChatBox() {
       <section className='flex-1 overflow-y-auto p-4'>
         {messages.map((msg: Message, index) =>
           msg.role === 'user' ? (
-            <div className='flex justify-end mt-2' key={index}>
+            <div className='flex justify-end mt-8' key={index}>
               <div className='max-w-lg bg-primary text-white px-4 py-2 rounded-lg'>
                 {msg.content}
               </div>
             </div>
           ) : (
-            <div className='flex justify-start mt-2' key={index}>
+            <div className='flex justify-start mt-8' key={index}>
               <div className='max-w-lg bg-gray-100 text-black px-4 py-2 rounded-lg'>
                 {msg.ui !== 'final' && msg.ui !== 'showFinal' && msg.content}
                 {RenderGenerativeUi(msg.ui ?? '', msg.content ?? '')}

@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 
 const client = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPEN_ROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 const PROMPT = `You are an AI Trip Planner Agent. Your goal is to help the user plan a trip by asking one relevant trip-related question at a time.
@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
   const { messages } = await req.json();
   try {
     const complitation = await client.chat.completions.create({
-      model: 'openai/gpt-4o-mini:free',
+    
+      model:'openai/gpt-oss-120b:free',
       response_format: { type: 'json_object' },
       messages: [
         {
