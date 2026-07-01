@@ -1,7 +1,7 @@
 import arcjet, { tokenBucket } from "@arcjet/next";
 import { NextRequest, NextResponse } from "next/server";
 
-const aj = arcjet({
+export const aj = arcjet({
   key: process.env.ARCJET_KEY!,
   rules: [
     tokenBucket({
@@ -9,7 +9,7 @@ const aj = arcjet({
       characteristics: ["userId"],
       refillRate: 5,
       interval: 86400,
-      capacity: 10,
+      capacity: 5,
     }),
   ],
 });

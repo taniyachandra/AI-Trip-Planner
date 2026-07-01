@@ -1,5 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { aj } from "../arcjet/route";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
@@ -115,9 +117,24 @@ Return the response in this exact JSON format:
 }
 `;
 export async function POST(req: NextRequest) {
-  try {
-    const { messages, isFinal } = await req.json();
+  const { messages, isFinal } = await req.json();
 
+  const user = await currentUser();
+  const {has} = await auth();
+  const hasPremiumAccess = has({ plan: 'monthly' })
+  console.log("hasPrimumAccess", hasPremiumAccess);
+   const decision = await aj.protect(req,{userId:user?.primaryEmailAddress?.emailAddress??'', requested:isFinal?5:0});
+   console.log("Arcjet decision", decision);
+   //@ts-ignore
+   if(decision?.reason?.remaining==0 && !hasPremiumAccess){
+    return NextResponse.json({ 
+      resp:'No Free Credit Remaining',
+      ui:'limit'
+   });
+
+   }
+  try {
+    
     // Strip out any extra fields (like "ui") that the AI API doesn't accept
     const cleanMessages = (messages ?? []).map((m: any) => ({
       role: m.role,
