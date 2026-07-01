@@ -41,8 +41,8 @@ Traditional travel planning is **time-consuming, confusing, and exhausting**. Us
 
 ## 🤖 AI Chat
 
-![AI Chat](ScreenShots/Ai-Chat1.png)
-![AI Chat](ScreenShots/Ai-Chat2.png)
+![AI Chat](ScreenShots/AI-Chat.png)
+![AI Chat](ScreenShots/AI-Chat2.png)
 
 ## 📅 Generated Itinerary
 

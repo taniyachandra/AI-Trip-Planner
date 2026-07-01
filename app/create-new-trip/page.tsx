@@ -1,20 +1,17 @@
 import React from 'react'
 import ChatBox from './_components/ChatBox'
+import Itinerary from './_components/Itinerary'
 
 function CreateNewTrip() {
   return (
-    <div className='grid grid-cols-1 md:grid-cols-2 gap-5 p-10'>
-    {/* // <div className='grid grid-cols-1 md:grid-cols-2 gap-5 px-10 py-10'> */}
-        <div>
-         {/* Chatbot */}
-         <ChatBox/>
-        </div>
-        <div>
-         { /* map and trip to dispaly */}
-         map and trip
-        </div>
-
+   <div className='grid grid-cols-1 md:grid-cols-5 gap-5 p-10'>
+    <div className='md:col-span-2'>
+     <ChatBox/>
     </div>
+    <div className='md:col-span-3'>
+     <Itinerary/>
+    </div>
+</div>
   )
 }
 

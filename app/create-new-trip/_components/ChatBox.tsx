@@ -11,7 +11,7 @@ import SelectDaysUi from './SelectDaysUi'
 import FinalUi from './FinalUi'
 import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
-import { useUserDetail } from '@/app/provider'
+import { useTripDetail, useUserDetail } from '@/app/provider'
 import { v4 as uuidv4 } from 'uuid';
 
 type Message = {
@@ -26,8 +26,61 @@ export type TripInfo = {
   duration: string,
   group_size: string,
   origin: string,
-  hotels: any,
-  itinerary: any,
+  hotels: Hotel[],
+  itinerary: Itinerary,
+}
+export type Hotel = {
+  hotel_name:string;
+  hotel_address:string;
+  price_per_night:string;
+  hotel_image_url:string;
+  geo_coordinates:{
+    latitude:number;
+    longitude:number;
+  };
+  rating:number;
+  description:string;
+}
+
+export type Activity={
+  place_name:string;
+  place_details:string;
+  place_image_url:string;
+   geo_coordinates:{
+    latitude:number;
+    longitude:number;
+  };
+  place_address:string;
+  ticket_pricing:string;
+  time_travel_each_location:string;
+  best_time_to_visit:string;
+
+}
+  
+export type Itinerary={
+  map(arg0: (dayData: any) => { title: string; content: React.JSX.Element }): unknown
+  day:number;
+  day_plan:string;
+  best_time_to_visit_day:string;
+  activities:Activity[];
+
+}
+export type TripDetail = {
+  tripDetail: TripInfo,
+  tripId: string,
+  uid: string | undefined,
+} 
+
+export type SaveTripDetail = {  
+}
+export type UserDetail = {
+  _id: string,
+  name: string,
+}
+
+export type UserDetailContextType = {
+  userDetail: UserDetail | null,
+  setUserDetail: (userDetail: UserDetail | null) => void,
 }
 
 function ChatBox() {
@@ -37,7 +90,10 @@ function ChatBox() {
   const [tripDetail, setTripDetail] = useState<TripInfo>();
   const [finalBotMsg, setFinalBotMsg] = useState('');
   const SaveTripDetail = useMutation(api.tripDetail.CreateTripDetail);
-  const { userDetail } = useUserDetail();
+  const { userDetail, setUserDetail } = useUserDetail();
+  //@ts-ignore
+
+  const { tripDetailInfo, setTripDetailInfo } = useTripDetail();
 
   // ✅ userDetail ka latest value ref mein store karo
   // kyunki onSend async hai aur closure mein purana value capture ho jata hai
@@ -67,13 +123,23 @@ function ChatBox() {
 
     if (forceFinal) {
       const tripData = result?.data?.trip_plan
+        if (!tripData) {
+    console.error("Trip plan generation failed:", result?.data)
+    setMessages((prev) => [...prev, {
+      role: 'assistant',
+      content: "Sorry, trip plan generate karne mein problem aayi. Please dobara try karo.",
+    }])
+    setLoading(false)
+    return   // 👈 yahi pe ruk jao, aage mat badho
+  }
+      setTripDetailInfo(result?.data?.trip_plan)
 
       // ✅ ref se latest userDetail lo — stale closure problem fix
       const currentUser = userDetailRef.current;
       console.log("userDetail from ref:", currentUser);
       console.log("uid:", currentUser?._id);
 
-      setTripDetail(tripData)
+      setTripDetailInfo(tripData)
       const tripId = uuidv4();
 
       await SaveTripDetail({
@@ -138,7 +204,8 @@ function ChatBox() {
   }
 
   return (
-    <div className='h-[90vh] flex flex-col'>
+    // <div className='h-[85vh] flex flex-col border shadow rounded-2xl  p-5'>
+     <div className='h-[99vh] flex flex-col border shadow rounded-2xl p-5 w-full overflow-hidden box-border'>
       {messages?.length === 0 && (
         <EmptyBoxState
           onSelectOption={(v: string) => {
@@ -174,11 +241,11 @@ function ChatBox() {
         )}
       </section>
 
-      <section>
-        <div className='border rounded-2xl p-4 relative'>
+      <section  className="w-full">
+        <div className='border rounded-2xl p-4 relative w-full box-border'>
           <Textarea
             placeholder='Start typing here...'
-            className='w-full h-28 bg-transparent border-none focus-visible:ring-0 shadow-none resize-none'
+            className='w-full h-28 bg-transparent border-none focus-visible:ring-0 shadow-none resize-none box-border'
             onChange={(event) => setUserInput(event.target.value)}
             value={userInput}
           />
