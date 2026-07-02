@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
+import { usePathname } from "next/navigation"
 
 const menuOptions = [
   { name: "Home", path: "/" },
@@ -13,6 +14,8 @@ const menuOptions = [
 
 export default function Header() {
   const { user } = useUser()
+  const path = usePathname();
+  console.log("Current path:", path);
 
   return (
     <div className="flex justify-between items-center p-4 sticky top-0 left-0 w-full z-50 bg-white shadow-md">
@@ -32,20 +35,27 @@ export default function Header() {
         ))}
       </div>
 
-      <div className="flex gap-5 items-center">
-        {!user ? (
-          <SignInButton mode="modal">
-            <Button>Get Started</Button>
-          </SignInButton>
-        ) : (
-          <>
-            <Link href="/create-new-trip">
-              <Button>Create New Trip</Button>
-            </Link>
-            <UserButton />
-          </>
-        )}
-      </div>
+    <div className="flex gap-5 items-center">
+  {!user ? (
+    <SignInButton mode="modal">
+      <Button>Get Started</Button>
+    </SignInButton>
+  ) : (
+    <>
+      {path === "/create-new-trip" ? (
+        <Link href="/my-trips">
+          <Button>My Trips</Button>
+        </Link>
+      ) : (
+        <Link href="/create-new-trip">
+          <Button>Create New Trip</Button>
+        </Link>
+      )}
+
+      <UserButton />
+    </>
+  )}
+</div>
 
     </div>
   )

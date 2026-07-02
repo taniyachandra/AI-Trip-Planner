@@ -6,8 +6,8 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 const model = genAI.getGenerativeModel({
-  // model: "gemini-2.5-flash",
-    model: "gemini-2.0-flash-lite" 
+  model: "gemini-2.5-flash",
+    // model: "gemini-2.0-flash-lite" 
 });
 
 const PROMPT = `IMPORTANT: ALWAYS respond ONLY with a valid JSON object in this exact format: {"resp": "your message", "ui": "componentName"}. Never add any text outside the JSON object. Never use markdown. Only JSON.

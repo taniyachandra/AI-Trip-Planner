@@ -27,8 +27,11 @@ function PlaceCardItem({activity}:Props) {
   }
   return (
     <div className="flex flex-col gap-2 border rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow bg-white">
-                <Image src={photoUrl?photoUrl: '/placeholder.jpg'} alt='placeholder' width={220} height={140}
-                className='object-cover rounded-xl' />
+                {/* <Image src={photoUrl?photoUrl: '/placeholder.jpg'} alt='placeholder' width={220} height={140}
+                className='object-cover rounded-xl' /> */}
+                  <Image src={photoUrl?photoUrl: '/placeholder.jpg'} alt='placeholder' width={300} height={160} 
+                                         className="rounded-xl  shadow object-cover w-full md-2"
+/>
                 <h2 className="text-lg font-semibold">{activity.place_name}</h2>
                 <p className="text-gray-500 line-clamp-2">{activity.place_details}</p>
                <h2 className="flex gap-2 text-blue-600 line-clamp-1"><Ticket/> {activity?.ticket_pricing || "Free"}</h2>
