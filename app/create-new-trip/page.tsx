@@ -1,6 +1,7 @@
-import React from 'react'
+import React, {  useState } from 'react'
 import ChatBox from './_components/ChatBox'
 import Itinerary from './_components/Itinerary'
+// import { useTripDetail } from '../provider'
 
 function CreateNewTrip() {
   return (
@@ -9,7 +10,7 @@ function CreateNewTrip() {
      <ChatBox/>
     </div>
     <div className='md:col-span-3'>
-     <Itinerary/>
+    <Itinerary/>
     </div>
 </div>
   )
