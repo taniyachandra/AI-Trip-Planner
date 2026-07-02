@@ -1,7 +1,7 @@
 import arcjet, { tokenBucket } from "@arcjet/next";
 import { NextRequest, NextResponse } from "next/server";
 
-export const aj = arcjet({
+ const aj = arcjet({
   key: process.env.ARCJET_KEY!,
   rules: [
     tokenBucket({
